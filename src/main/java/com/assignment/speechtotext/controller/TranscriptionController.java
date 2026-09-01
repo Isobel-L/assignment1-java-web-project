@@ -9,9 +9,18 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.assignment.speechtotext.model.TranscriptionResponse;
+import com.assignment.speechtotext.service.TranscriptionService;
 
 @RestController
 public class TranscriptionController {
+
+    private final TranscriptionService transcriptionService;
+
+    public TranscriptionController(
+            TranscriptionService transcriptionService) {
+
+        this.transcriptionService = transcriptionService;
+    }
 
     @PostMapping(
             value = "/api/v1/transcriptions",
@@ -21,23 +30,21 @@ public class TranscriptionController {
             @RequestParam("audio") MultipartFile audio) {
 
         if (audio.isEmpty()) {
+
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new TranscriptionResponse(
-                            "No audio data was received."
-                    ));
+                    .body(
+                            new TranscriptionResponse(
+                                    "No audio data was received."
+                            )
+                    );
         }
 
-        System.out.println(
-                "Received audio file: "
-                + audio.getOriginalFilename()
-                + " (" + audio.getSize() + " bytes)"
-        );
+        String transcription =
+                transcriptionService.transcribe(audio);
 
         return ResponseEntity.ok(
-                new TranscriptionResponse(
-                        "Audio received successfully."
-                )
+                new TranscriptionResponse(transcription)
         );
     }
 }
