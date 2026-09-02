@@ -29,8 +29,7 @@ public class TranscriptionController {
     private static final String PATH =
             "/api/v1/transcriptions";
 
-    private final TranscriptionService
-            transcriptionService;
+    private final TranscriptionService transcriptionService;
 
     public TranscriptionController(
             TranscriptionService transcriptionService) {
@@ -41,8 +40,7 @@ public class TranscriptionController {
 
     @PostMapping(
             value = PATH,
-            consumes =
-                    MediaType.MULTIPART_FORM_DATA_VALUE
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public CompletableFuture<ResponseEntity<?>>
             uploadAudio(
@@ -100,9 +98,7 @@ public class TranscriptionController {
                             );
 
                     return ResponseEntity
-                            .status(
-                                    HttpStatus.BAD_GATEWAY
-                            )
+                            .status(HttpStatus.BAD_GATEWAY)
                             .body(response);
                 });
     }
