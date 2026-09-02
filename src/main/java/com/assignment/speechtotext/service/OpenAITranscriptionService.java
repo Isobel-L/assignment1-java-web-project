@@ -33,13 +33,16 @@ public class OpenAITranscriptionService
 
     private final HttpClient httpClient;
     private final JsonMapper jsonMapper;
+    private final GlobalStatsService globalStatsService;
     private final String apiKey;
 
     public OpenAITranscriptionService(
             JsonMapper jsonMapper,
+            GlobalStatsService globalStatsService,
             @Value("${OPENAI_API_KEY:}") String apiKey) {
 
         this.jsonMapper = jsonMapper;
+        this.globalStatsService = globalStatsService;
         this.apiKey = apiKey;
 
         this.httpClient = HttpClient.newBuilder()
@@ -143,6 +146,46 @@ public class OpenAITranscriptionService
                 );
             }
 
+            JsonNode usageNode =
+                    json.get("usage");
+
+            if (usageNode == null
+                    || !usageNode.isObject()) {
+
+                throw new IllegalStateException(
+                        "OpenAI response did not contain "
+                                + "token usage information."
+                );
+            }
+
+            JsonNode inputTokensNode =
+                    usageNode.get("input_tokens");
+
+            JsonNode outputTokensNode =
+                    usageNode.get("output_tokens");
+
+            if (inputTokensNode == null
+                    || !inputTokensNode.isNumber()
+                    || outputTokensNode == null
+                    || !outputTokensNode.isNumber()) {
+
+                throw new IllegalStateException(
+                        "OpenAI response contained invalid "
+                                + "token usage information."
+                );
+            }
+
+            long inputTokens =
+                    inputTokensNode.longValue();
+
+            long outputTokens =
+                    outputTokensNode.longValue();
+
+            globalStatsService.addUsage(
+                    inputTokens,
+                    outputTokens
+            );
+
             return textNode.asString();
 
         } catch (Exception e) {
@@ -237,7 +280,9 @@ public class OpenAITranscriptionService
             String value) throws IOException {
 
         output.write(
-                value.getBytes(StandardCharsets.UTF_8)
+                value.getBytes(
+                        StandardCharsets.UTF_8
+                )
         );
     }
 
